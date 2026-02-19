@@ -14,6 +14,12 @@ jobs:
       - name: تحميل الكود من المستودع
         uses: actions/checkout@v4
 
+      - name: إعداد Java 17 (مطلوب لأحدث إصدارات SDK)
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: تثبيت Python
         uses: actions/setup-python@v4
         with:
@@ -31,8 +37,6 @@ jobs:
             git \
             zip \
             unzip \
-            openjdk-17-jdk \
-            python3-pip \
             autoconf \
             libtool \
             pkg-config \
@@ -51,9 +55,9 @@ jobs:
           mkdir -p $HOME/.buildozer/android/platform/android-sdk
           cd $HOME/.buildozer/android/platform
           
-          # تحميل Android SDK command line tools (الإصدار الصحيح)
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          unzip -q commandlinetools-linux-11076708_latest.zip
+          # تحميل Android SDK command line tools (إصدار مستقر أقدم)
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip -q commandlinetools-linux-9477386_latest.zip
           
           # إنشاء هيكل المجلدات الصحيح
           mkdir -p android-sdk/cmdline-tools
@@ -66,14 +70,17 @@ jobs:
           # قبول التراخيص
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
           
-          # تثبيت المكونات الأساسية
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-31" "build-tools;31.0.0"
+          # تثبيت المكونات الأساسية (إصدارات متوافقة)
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-31" "build-tools;30.0.3"
 
       - name: بناء التطبيق
         run: |
           # تعيين متغيرات البيئة
           export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
           export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+          
+          # تعديل buildozer.spec لاستخدام build-tools 30.0.3
+          sed -i 's/android.build_tools = .*/android.build_tools = 30.0.3/g' buildozer.spec
           
           # بناء التطبيق
           buildozer -v android debug

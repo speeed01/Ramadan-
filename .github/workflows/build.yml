@@ -3,13 +3,13 @@ name: بناء تطبيق درع رمضان
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:    # يسمح بتشغيل البناء يدوياً
+  workflow_dispatch:
 
 jobs:
   build-android:
     name: بناء APK لنظام Android
     runs-on: ubuntu-22.04
-
+    
     steps:
       - name: تحميل الكود من المستودع
         uses: actions/checkout@v4
@@ -27,10 +27,56 @@ jobs:
       - name: تثبيت حزم النظام المطلوبة
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+          sudo apt install -y \
+            git \
+            zip \
+            unzip \
+            openjdk-17-jdk \
+            python3-pip \
+            autoconf \
+            libtool \
+            pkg-config \
+            zlib1g-dev \
+            libncurses5-dev \
+            libncursesw5-dev \
+            libtinfo5 \
+            cmake \
+            libffi-dev \
+            libssl-dev \
+            wget
+
+      - name: تثبيت Android SDK يدوياً
+        run: |
+          # إنشاء مجلد Android SDK
+          mkdir -p $HOME/.buildozer/android/platform/android-sdk
+          cd $HOME/.buildozer/android/platform
+          
+          # تحميل Android SDK command line tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip -o commandlinetools-linux-9477386_latest.zip
+          mkdir -p android-sdk/cmdline-tools
+          mv cmdline-tools android-sdk/cmdline-tools/latest
+          
+          # تعيين متغيرات البيئة
+          export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+          
+          # قبول جميع التراخيص تلقائياً
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          
+          # تثبيت المكونات المطلوبة
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-31" "build-tools;31.0.0"
 
       - name: بناء التطبيق باستخدام Buildozer
         run: |
+          # تعيين متغيرات البيئة
+          export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+          
+          # تعديل buildozer.spec لاستخدام الإصدار الصحيح من build-tools
+          sed -i 's/android.build_tools = .*/android.build_tools = 31.0.0/g' buildozer.spec
+          
+          # بناء التطبيق
           buildozer -v android debug
 
       - name: رفع ملف APK

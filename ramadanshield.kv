@@ -1,1 +1,303 @@
+#:kivy 2.1.0
+#:import get_color_from_hex kivy.utils.get_color_from_hex
 
+<MainScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: [25, 40, 25, 25]
+        spacing: 20
+        canvas.before:
+            Color:
+                rgba: get_color_from_hex('#1a2634')
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        # الهيدر مع التاريخ الهجري
+        BoxLayout:
+            size_hint_y: 0.15
+            orientation: 'vertical'
+            spacing: 5
+            
+            Label:
+                text: '🌙 رمضان مبارك'
+                font_size: '28sp'
+                color: get_color_from_hex('#f1c40f')
+                bold: True
+            
+            Label:
+                text: 'درع رمضان - حماية نقية'
+                font_size: '14sp'
+                color: get_color_from_hex('#95a5a6')
+
+        # الدرع الرئيسي مع الحالة
+        BoxLayout:
+            size_hint_y: 0.35
+            orientation: 'vertical'
+            spacing: 10
+            
+            Widget:
+                size_hint_y: 0.1
+            
+            Label:
+                text: '🛡️'
+                font_size: '120sp'
+                color: get_color_from_hex('#f39c12') if root.is_protected else get_color_from_hex('#7f8c8d')
+            
+            Label:
+                text: root.vpn_status
+                font_size: '24sp'
+                color: get_color_from_hex(root.status_color)
+                bold: True
+            
+            Label:
+                text: f'نوع الحماية: {root.dns_server}'
+                font_size: '14sp'
+                color: get_color_from_hex('#bdc3c7')
+                shorten: True
+                shorten_from: 'right'
+
+        # زر التشغيل الرئيسي
+        Button:
+            id: toggle_button
+            text: '🔴 إيقاف الحماية' if root.is_protected else '🟢 بدء الحماية'
+            size_hint_y: 0.15
+            font_size: '22sp'
+            bold: True
+            background_color: get_color_from_hex('#c0392b') if root.is_protected else get_color_from_hex('#27ae60')
+            color: 1, 1, 1, 1
+            on_press: root.toggle_vpn()
+            canvas.before:
+                Color:
+                    rgba: get_color_from_hex('#2c3e50') if self.state == 'normal' else get_color_from_hex('#34495e')
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [25,]
+
+        # أزرار القائمة السريعة
+        BoxLayout:
+            size_hint_y: 0.25
+            spacing: 15
+            
+            Button:
+                text: '⚙️ DNS'
+                font_size: '18sp'
+                background_color: get_color_from_hex('#3498db')
+                color: 1, 1, 1, 1
+                on_press: root.go_to_dns_settings()
+                canvas.before:
+                    Color:
+                        rgba: get_color_from_hex('#2980b9')
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [15,]
+            
+            Button:
+                text: '📊 إحصائيات'
+                font_size: '18sp'
+                background_color: get_color_from_hex('#9b59b6')
+                color: 1, 1, 1, 1
+                on_press: root.go_to_stats()
+                canvas.before:
+                    Color:
+                        rgba: get_color_from_hex('#8e44ad')
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [15,]
+
+        # معلومات إضافية
+        BoxLayout:
+            size_hint_y: 0.1
+            orientation: 'vertical'
+            spacing: 5
+            
+            Label:
+                text: 'حجب المواقع الإباحية والإعلانات'
+                font_size: '14sp'
+                color: get_color_from_hex('#ecf0f1')
+                halign: 'center'
+            
+            Label:
+                text: 'بدون روت • آمن ١٠٠٪'
+                font_size: '12sp'
+                color: get_color_from_hex('#7f8c8d')
+                halign: 'center'
+
+<DNSScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: [25, 40, 25, 25]
+        spacing: 20
+        canvas.before:
+            Color:
+                rgba: get_color_from_hex('#1a2634')
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        Label:
+            text: '⚙️ إعدادات DNS'
+            font_size: '32sp'
+            color: get_color_from_hex('#f1c40f')
+            bold: True
+            size_hint_y: 0.15
+
+        ScrollView:
+            do_scroll_y: True
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 15
+                padding: [10, 10]
+
+                Button:
+                    text: '🚸 DNS عائلي (حجب الإباحيات)'
+                    size_hint_y: None
+                    height: 80
+                    font_size: '18sp'
+                    background_color: get_color_from_hex('#16a085')
+                    color: 1, 1, 1, 1
+                    on_press: root.select_dns('family')
+                    canvas.before:
+                        Color:
+                            rgba: get_color_from_hex('#1abc9c')
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [20,]
+
+                Button:
+                    text: '🚫 DNS مع حجب الإعلانات'
+                    size_hint_y: None
+                    height: 80
+                    font_size: '18sp'
+                    background_color: get_color_from_hex('#2980b9')
+                    color: 1, 1, 1, 1
+                    on_press: root.select_dns('adblock')
+                    canvas.before:
+                        Color:
+                            rgba: get_color_from_hex('#3498db')
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [20,]
+
+                Button:
+                    text: '🔧 DNS مخصص (قريباً)'
+                    size_hint_y: None
+                    height: 80
+                    font_size: '18sp'
+                    background_color: get_color_from_hex('#7f8c8d')
+                    color: 1, 1, 1, 1
+                    disabled: True
+                    on_press: root.select_dns('custom')
+                    canvas.before:
+                        Color:
+                            rgba: get_color_from_hex('#95a5a6')
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [20,]
+
+        Button:
+            text: '🔙 العودة'
+            size_hint_y: 0.1
+            font_size: '20sp'
+            background_color: get_color_from_hex('#e67e22')
+            color: 1, 1, 1, 1
+            on_press: root.go_back()
+            canvas.before:
+                Color:
+                    rgba: get_color_from_hex('#d35400')
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [15,]
+
+<StatsScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: [25, 40, 25, 25]
+        spacing: 20
+        canvas.before:
+            Color:
+                rgba: get_color_from_hex('#1a2634')
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        Label:
+            text: '📈 إحصائيات الحماية'
+            font_size: '32sp'
+            color: get_color_from_hex('#f1c40f')
+            bold: True
+            size_hint_y: 0.15
+
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 20
+            size_hint_y: 0.6
+
+            Label:
+                id: sent_label
+                text: 'البيانات المرسلة: 0 B'
+                font_size: '20sp'
+                color: get_color_from_hex('#ecf0f1')
+                halign: 'center'
+
+            Label:
+                id: received_label
+                text: 'البيانات المستلمة: 0 B'
+                font_size: '20sp'
+                color: get_color_from_hex('#ecf0f1')
+                halign: 'center'
+
+            Label:
+                id: blocked_label
+                text: 'المواقع المحجوبة: 0'
+                font_size: '20sp'
+                color: get_color_from_hex('#e74c3c')
+                halign: 'center'
+                bold: True
+
+        BoxLayout:
+            size_hint_y: 0.15
+            spacing: 15
+
+            Button:
+                text: '🔄 تحديث'
+                font_size: '18sp'
+                background_color: get_color_from_hex('#27ae60')
+                color: 1, 1, 1, 1
+                on_press: root.update_stats()
+                canvas.before:
+                    Color:
+                        rgba: get_color_from_hex('#2ecc71')
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [15,]
+
+            Button:
+                text: '🔙 رجوع'
+                font_size: '18sp'
+                background_color: get_color_from_hex('#e67e22')
+                color: 1, 1, 1, 1
+                on_press: root.go_back()
+                canvas.before:
+                    Color:
+                        rgba: get_color_from_hex('#d35400')
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [15,]
+
+        Label:
+            text: 'يتم التحديث تلقائياً كل ثانيتين'
+            font_size: '12sp'
+            color: get_color_from_hex('#7f8c8d')
+            size_hint_y: 0.1

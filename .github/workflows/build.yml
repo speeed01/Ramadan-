@@ -49,7 +49,7 @@ jobs:
             libssl-dev \
             wget
 
-      - name: إعداد Android SDK مع الربط المتوافق
+      - name: إعداد Android SDK مع NDK 25
         run: |
           # إنشاء مجلدات Android SDK
           mkdir -p $HOME/.buildozer/android/platform/android-sdk
@@ -63,12 +63,10 @@ jobs:
           mkdir -p android-sdk/cmdline-tools
           mv cmdline-tools android-sdk/cmdline-tools/latest
           
-          # ===== الحل السحري للمشكلة =====
-          # Buildozer يبحث عن sdkmanager في المسار القديم tools/bin
-          # سنقوم بإنشاء هذا المسار وربطه بالمسار الجديد
+          # إنشاء المسار القديم للتوافق
           mkdir -p android-sdk/tools/bin
           
-          # إنشاء رابط رمزي (symlink) من المسار القديم إلى المسار الجديد
+          # إنشاء رابط رمزي للمسار القديم
           ln -sf $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager \
                  $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
           
@@ -79,16 +77,25 @@ jobs:
           # قبول التراخيص
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
           
-          # تثبيت المكونات الأساسية
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-31" "build-tools;30.0.3"
+          # تثبيت المكونات الأساسية - مع NDK 25b (الإصدار المطلوب)
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-31" "build-tools;30.0.3" "ndk;25.1.8937393"
+          
+          # إنشاء مجلد NDK في المسار الذي يتوقعه Buildozer
+          mkdir -p $HOME/.buildozer/android/platform/android-ndk-r25b
+          
+          # نسخ NDK المثبت إلى المسار المتوقع
+          cp -r $ANDROID_HOME/ndk/25.1.8937393/* $HOME/.buildozer/android/platform/android-ndk-r25b/
 
       - name: بناء التطبيق
         run: |
           # تعيين متغيرات البيئة
           export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
           export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+          export ANDROIDNDK=$HOME/.buildozer/android/platform/android-ndk-r25b
+          export ANDROIDNDKVER=r25b
           
-          # تعديل buildozer.spec لاستخدام build-tools 30.0.3
+          # تعديل buildozer.spec لاستخدام NDK 25
+          sed -i 's/android.ndk = .*/android.ndk = 25b/g' buildozer.spec
           sed -i 's/android.build_tools = .*/android.build_tools = 30.0.3/g' buildozer.spec
           
           # بناء التطبيق

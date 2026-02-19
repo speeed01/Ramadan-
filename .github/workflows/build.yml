@@ -45,15 +45,17 @@ jobs:
             libssl-dev \
             wget
 
-      - name: تثبيت Android SDK يدوياً
+      - name: إعداد Android SDK
         run: |
-          # إنشاء مجلد Android SDK
+          # إنشاء مجلدات Android SDK
           mkdir -p $HOME/.buildozer/android/platform/android-sdk
           cd $HOME/.buildozer/android/platform
           
-          # تحميل Android SDK command line tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-          unzip -o commandlinetools-linux-9477386_latest.zip
+          # تحميل Android SDK command line tools (الإصدار الصحيح)
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q commandlinetools-linux-11076708_latest.zip
+          
+          # إنشاء هيكل المجلدات الصحيح
           mkdir -p android-sdk/cmdline-tools
           mv cmdline-tools android-sdk/cmdline-tools/latest
           
@@ -61,20 +63,17 @@ jobs:
           export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
           export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
           
-          # قبول جميع التراخيص تلقائياً
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          # قبول التراخيص
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
           
-          # تثبيت المكونات المطلوبة
+          # تثبيت المكونات الأساسية
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-31" "build-tools;31.0.0"
 
-      - name: بناء التطبيق باستخدام Buildozer
+      - name: بناء التطبيق
         run: |
           # تعيين متغيرات البيئة
           export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
           export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
-          
-          # تعديل buildozer.spec لاستخدام الإصدار الصحيح من build-tools
-          sed -i 's/android.build_tools = .*/android.build_tools = 31.0.0/g' buildozer.spec
           
           # بناء التطبيق
           buildozer -v android debug
